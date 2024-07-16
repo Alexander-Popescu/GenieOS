@@ -1,12 +1,3 @@
-	[org 0x7C00]
-
-	;some code to run the function
-	mov bx, string
-	call printString
-	jmp $
-
-
-
 	;print function that starts printing a string
 	;at position specified by bx
 printString:
@@ -30,14 +21,14 @@ printString:
 	pop ax
 	ret
 
-
-string:
-	db "Hello World!"
-	db 0
-	;for testing function
-
-; create bootable file
-
-	times 510 - ($-$$) db 0
-	dw 0xAA55
-	
+printNewLine:
+    pusha
+    
+    mov ah, 0x0e
+    mov al, 0x0a ; newline char
+    int 0x10
+    mov al, 0x0d ; carriage return
+    int 0x10
+    
+    popa
+    ret
