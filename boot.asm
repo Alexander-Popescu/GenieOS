@@ -1,33 +1,30 @@
-	[org 0x7C00]
+[org 0x7C00]
 
-	mov bp, 0x8000 ; move stack far away
+	mov bp, 0x9000 ; stack location
 	mov sp, bp
 
-	mov bx, 0x9000 ; ES is 0 by default
-	mov dh, 2 ; read two sectors
-	; dl is set automatically by the BIOS
-	call diskLoad
+	mov bx, REAL_MODE_MESSAGE
+	call printString
 
-	mov dx, [0x9000] ; first word of first sector
-	call printHex
-
-	call printNewLine
-
-	mov dx, [0x9000 + 512] ; 1 sector out from first sector, first word of second sector
-	call printHex
+	call switchProtected ; switch to 32 bit protected mode
 
 	jmp $
 
 %include "printString.asm"
-%include "printHex.asm"
-%include "disk.asm"
+%include "32bitPrint.asm"
+%include "32bitGDT.asm"
+%include "32bitSwitch.asm"
 
-	; identify sector as boot sector
-	times 510 - ($-$$) db 0
-	dw 0xAA55
+	;time for our actual code
+[bits 32]
+protectedStart:
+	mov ebx, PROTECTED_MODE_MESSAGE
+	call printStringProtected
+	jmp $
 
-	; we are past the boot sector now, information is considered on the hard
-	; drive but it is not loaded into memory by the BIOS
-	
-	times 256 dw 0xABCD ; fill second sector with ABCD
-	times 256 dw 0xFACE ; fill third sector with FACE
+REAL_MODE_MESSAGE db "Started in 16-bit real mode", 0
+PROTECTED_MODE_MESSAGE db "Switched to 32-bit protected mode", 0
+
+; identify sector as boot sector
+times 510 - ($-$$) db 0
+dw 0xAA55
