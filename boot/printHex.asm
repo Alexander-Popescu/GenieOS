@@ -38,6 +38,6 @@ printHex:
 	ret
 
 
-.output
+.output:
 	db '0x0000',0
 
