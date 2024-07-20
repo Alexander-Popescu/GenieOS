@@ -29,7 +29,7 @@ loadKernel:
 	call printNewLine
 
 	mov bx, KERNEL_OFFSET ; put read data from disk into 0x1000
-	mov dh, 2
+	mov dh, 16
 	mov dl, [BOOT_DRIVE]
 	call diskLoad
 	ret

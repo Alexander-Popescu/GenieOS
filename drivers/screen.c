@@ -1,91 +1,103 @@
 #include "screen.h"
 #include "ports.h"
 
-int getCursorOffset()
-{
+int get_offset(int col, int row) { return 2 * (row * MAX_COLS + col); }
+int get_offset_row(int offset) { return offset / (2 * MAX_COLS); }
+int get_offset_col(int offset) { return (offset - (get_offset_row(offset)*2*MAX_COLS))/2; }
+
+int getCursorOffset() {
     int offset;
-    //tell VGA to place high byte of cursor into data register
+
     port_byte_out(VGA_CTRL_REG, 14);
-    offset += (port_byte_in(VGA_DATA_REG) << 8);
-    
-    //now low byte 
+    offset = port_byte_in(VGA_DATA_REG) << 8;
     port_byte_out(VGA_CTRL_REG, 15);
     offset += port_byte_in(VGA_DATA_REG);
 
-    return offset * 2; 
-
+    return offset * 2;
 }
 
-void setCursorOffset(int offset)
-{
+void setCursorOffset(int offset) {
     offset /= 2;
 
     port_byte_out(VGA_CTRL_REG, 14);
     port_byte_out(VGA_DATA_REG, (unsigned char)(offset >> 8));
     port_byte_out(VGA_CTRL_REG, 15);
-    port_byte_out(VGA_DATA_REG, (unsigned char)(offset & 0xFF));
+    port_byte_out(VGA_DATA_REG, (unsigned char)(offset & 0xff));
 }
 
-int printChar(char c, int col, int row, int attribute)
-{
-    int offset;
-    if (attribute == 0) {attribute = WHITE_ON_BLACK;}
+void printChar(char c, int offset, char attr) {
+    unsigned char *vidmem = (unsigned char*) VIDEO_ADDRESS;
+    if (!attr) attr = WHITE_ON_BLACK;
 
-    if (col < 0 || row < 0)
-    {
-	offset = getCursorOffset();
-    } else {
-	offset = 2 * (MAX_COLS * (row) + col);
+    if (offset >= 2 * MAX_COLS * MAX_ROWS) {
+        vidmem[2*(MAX_COLS)*(MAX_ROWS)-2] = 'E';
+        vidmem[2*(MAX_COLS)*(MAX_ROWS)-1] = RED_ON_WHITE;
+    }
+
+    if (offset < 0) {
+        offset = getCursorOffset();
     }
 
     if (c == '\n') {
-	row = (offset / MAX_COLS) / 2;
-	offset = 2 * (row + 1 * MAX_COLS);
+        int row = get_offset_row(offset);
+        offset = get_offset(0, row+1);
     } else {
-	unsigned char *vRam = (unsigned char*) VIDEO_ADDRESS;
-	vRam[offset] = c;
-	vRam[offset + 1] = attribute;
-	offset += 2;
+        vidmem[offset] = c;
+        vidmem[offset+1] = attr;
+        offset += 2;
     }
+
+    if (offset >= MAX_ROWS * MAX_COLS * 2) {
+        int i;
+        for (i = 1; i < MAX_ROWS; i++) 
+            memory_copy((char *)get_offset(0, i) + VIDEO_ADDRESS,
+                        (char *)get_offset(0, i-1) + VIDEO_ADDRESS,
+                        MAX_COLS * 2);
+
+        /* Blank last line */
+        char *last_line = (char *)get_offset(0, MAX_ROWS-1) + VIDEO_ADDRESS;
+        for (i = 0; i < MAX_COLS * 2; i++) last_line[i] = 0;
+
+        offset -= 2 * MAX_COLS;
+    }
+
     setCursorOffset(offset);
-    return offset;
 }
 
-void clear_screen() {
-    unsigned char* vRam = (unsigned char*)VIDEO_ADDRESS;
-    for (int i = 0; i < MAX_ROWS * MAX_COLS; i++)
-    {
-	vRam[2 * i] = ' ';
-	vRam[2 * i + 1] = WHITE_ON_BLACK;
-    }
-    setCursorOffset(0);
-}
 
-int get_offset(int col, int row) { return 2 * (row * MAX_COLS + col); }
-int get_offset_row(int offset) { return offset / (2 * MAX_COLS); }
-int get_offset_col(int offset) { return (offset - (get_offset_row(offset)*2*MAX_COLS))/2; }
 
-void kprint_at(char *message, int col, int row) {
-    /* Set cursor if col/row are negative */
+void VGAPrintPos(char *message, int col, int row) {
     int offset;
-    if (col >= 0 && row >= 0)
+
+    if (col < 0 || row < 0) {
+        offset = getCursorOffset();
+        row = get_offset_row(offset);
+        col = get_offset_col(offset);
+    } else {
         offset = get_offset(col, row);
-    else {
+    }
+
+    int i = 0;
+    while (message[i] != 0) {
+        printChar(message[i++], get_offset(col, row), WHITE_ON_BLACK);
         offset = getCursorOffset();
         row = get_offset_row(offset);
         col = get_offset_col(offset);
     }
-
-    /* Loop through message and print it */
-    int i = 0;
-    while (message[i] != 0) {
-        offset = printChar(message[i++], col, row, WHITE_ON_BLACK);
-        /* Compute row/col for next iteration */
-        row = get_offset_row(offset);
-        col = get_offset_col(offset);
-    }
 }
 
-void kprint(char *message) {
-    kprint_at(message, -1, -1);
+void VGAPrint(char *message) {
+    VGAPrintPos(message, -1, -1);
+}
+
+void clearScreen() {
+    int screen_size = MAX_COLS * MAX_ROWS;
+    int i;
+    char *screen = (char *)VIDEO_ADDRESS;
+
+    for (i = 0; i < screen_size; i++) {
+        screen[i*2] = ' ';
+        screen[i*2+1] = WHITE_ON_BLACK;
+    }
+    setCursorOffset(0);
 }
