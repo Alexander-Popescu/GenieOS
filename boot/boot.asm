@@ -1,16 +1,62 @@
 [org 0x7c00]
 [bits 16]
 
-	mov bx, .string
+	;setup stack
+	mov bp, 0x9000
+	mov sp, bp
+
+	mov bx, WELCOME_MESSAGE
 	call printString
+	mov bx, NEWLINE
+	call printString
+
+	mov bx, ATTEMPT_MESSAGE
+	call printString
+	mov bx, NEWLINE
+	call printString
+
+	call enterProtectedMode
 
 	jmp $
 
 %include "printString.asm"
+%include "enterProtectedMode.asm"
+%include "setupGDT.asm"
+%include "32BitPrint.asm"
 
-.string:
-	db "Hello, World!"
-	db 0
+[bits 32]
+startProtectedMode:
+	; update segmentation registers
+	mov ax, DATA_SEGMENT
+	mov ds, ax
+	mov ss, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+
+	; move stack
+	mov ebp, 0x90000
+	mov esp, ebp
+
+	mov ebx, ENTER_MESSAGE
+	call print_string_pm
+
+	jmp $
+
+WELCOME_MESSAGE: ; with newline and carriage return
+	db "Welcome to GenieLoader, the official GenieOS Bootloader", 0xa, 0
+
+ATTEMPT_MESSAGE:
+	db "Attempting to switch to 32-Bit Protected Mode...", 0
+
+ENTER_MESSAGE:
+	db "Entered 32Bit Protected Mode", 0
+
+NEWLINE:
+	db 0xa, 0xd, 0
+
+SUCCESS_MESSAGE:
+	db "SUCCESS", 0
 
 ;boot sector padding
 times 510-($-$$) db 0
