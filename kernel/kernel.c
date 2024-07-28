@@ -1,8 +1,10 @@
+#include "../drivers/VGAText.h"
+
 void test() {
     //does nothing
 }
 
 int main() {
-    char* video_memory = (char*) 0xb8000;
-    *video_memory = 'X';
+    initScreen();
+    printChar('X', 10, 0);
 }
