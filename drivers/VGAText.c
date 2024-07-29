@@ -46,18 +46,28 @@ void printError(uint8_t attribute) {
 	//prints a red E in the bottom right corner to indicate error
 	printChar('E', OFFSET_LIMIT, attribute);
 }
-
-void printChar(char c, int16_t offset, uint8_t attribute) {
+uint16_t printChar(char c, int16_t offset, uint8_t attribute) {
 	if (c == '\n') {
 		//calculate new offset and set cursor
 		uint16_t currentOffset = getCursorOffset();
-		setCursorLocation((currentOffset - (currentOffset % MAX_COLS)) + MAX_COLS);
-		return;
+		if (currentOffset > (OFFSET_LIMIT - MAX_COLS))
+		{
+			//last line edgecase
+			scrollScreen();
+			offset = OFFSET_LIMIT - MAX_COLS + 1;
+			setCursorLocation(offset);
+			return offset;
+
+		} else {
+			uint16_t offset = (currentOffset - (currentOffset % MAX_COLS)) + MAX_COLS;
+			setCursorLocation(offset);
+			return offset;
+		}
 	}
 	
 	if (offset > OFFSET_LIMIT ) {
 		printError(RED_ON_WHITE);
-		return;
+		return OFFSET_LIMIT + 1;
 	} else {
 		if (offset < 0) {
 			offset = getCursorOffset();
@@ -71,8 +81,9 @@ void printChar(char c, int16_t offset, uint8_t attribute) {
 		vRam[offset * 2 + 1] = attribute;
 	}
 
-	setCursorLocation(offset + 1);	
-	return;
+	offset += 1;
+	setCursorLocation(offset);	
+	return offset;
 }
 
 void setAttrib(uint8_t attribute, uint16_t offset) {
@@ -108,7 +119,7 @@ void printString(char* string, int16_t offset, uint8_t attribute) {
 	}
 	int i = 0;
 	while (string[i] != 0) {
-		printChar(string[i++], offset++, attribute);
+		offset = printChar(string[i++], offset, attribute);
 		if (offset > OFFSET_LIMIT) {
 			scrollScreen();
 			offset = getCursorOffset();
