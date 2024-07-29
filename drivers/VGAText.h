@@ -22,6 +22,8 @@
 #define OFFSET_LIMIT MAX_COLS * MAX_ROWS - 1
 
 #include "../util/intdef.h"
+#include "../drivers/IOports.h"
+#include "../util/util.h"
 
 int clearScreen();
 void setCursorLocation(uint16_t offset);
@@ -29,7 +31,11 @@ uint16_t getCursorOffset();
 
 void initScreen();
 
-void printChar(char c, uint16_t offset, uint8_t attribute);
+void printChar(char c, int16_t offset, uint8_t attribute);
 void setAttrib(uint8_t attribute, uint16_t offset);
+
+void printString(char* string, int16_t offset, uint8_t attribute);
+
+void scrollScreen();
 
 #endif
