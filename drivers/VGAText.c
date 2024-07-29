@@ -48,6 +48,12 @@ void printError(uint8_t attribute) {
 }
 
 void printChar(char c, int16_t offset, uint8_t attribute) {
+	if (c == '\n') {
+		//calculate new offset and set cursor
+		uint16_t currentOffset = getCursorOffset();
+		setCursorLocation((currentOffset - (currentOffset % MAX_COLS)) + MAX_COLS);
+		return;
+	}
 	
 	if (offset > OFFSET_LIMIT ) {
 		printError(RED_ON_WHITE);
@@ -87,12 +93,12 @@ void scrollScreen() {
 
     memoryCopy(src, dest, (MAX_COLS * (MAX_ROWS - 1)) * 2);
 
-    uint16_t* clearStart = (uint16_t*)(VRAM_START_ADDRESS) + (MAX_COLS * (MAX_ROWS - 1));
-    for (int i = 0; i < MAX_COLS; i++) {
-        clearStart[i * 2] = ' ';
-    }
 
-	setCursorLocation(getCursorOffset() - MAX_COLS);
+	for (int i = 0; i < MAX_COLS; i++) {
+		printChar(' ', MAX_COLS * (MAX_ROWS - 1) + i, 0);
+	}
+
+	setCursorLocation(MAX_COLS * (MAX_ROWS - 1));
 
 }
 
@@ -103,5 +109,9 @@ void printString(char* string, int16_t offset, uint8_t attribute) {
 	int i = 0;
 	while (string[i] != 0) {
 		printChar(string[i++], offset++, attribute);
+		if (offset > OFFSET_LIMIT) {
+			scrollScreen();
+			offset = getCursorOffset();
+		}
 	}
 }
