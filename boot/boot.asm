@@ -16,7 +16,7 @@
 	call printString
 
 	mov bx, KERNEL_OFFSET
-	mov dh, 16
+	mov dh, 32
 	mov dl, [BOOT_DRIVE]
 	call loadKernel
 

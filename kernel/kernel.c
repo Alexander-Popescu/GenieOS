@@ -1,14 +1,15 @@
 #include "../drivers/VGAText.h"
+#include "../cpu/isr.h"
 
-
-void test() {
-    //does nothing
+void systemInit() {
+    initScreen();
+    initISR();
 }
 
 int main() {
-    initScreen();
-    printString("Test1!", MAX_COLS * 3, 0);
-    printString("Test2", -1, 0);
-    printString("\nTest3", -1,0);
-    printString("Testing Screen\n Scroll!", OFFSET_LIMIT - 2, 0);
+    systemInit();
+    printString("Welcome to GenieOS\n", -1, 0);
+    asm volatile ("int $0");
+    asm volatile ("int $2");
+    asm volatile ("int $255");
 }
