@@ -1,5 +1,6 @@
 ;c function
 [extern ISRHandler]
+[extern IRQHandler]
 
 isr_common_stub:
 	;push information to the stack
@@ -14,9 +15,8 @@ isr_common_stub:
 	
 	;OS handle
 	call ISRHandler
-	
-	;return
 	pop eax 
+	;return
 	mov ds, ax
 	mov es, ax
 	mov fs, ax
@@ -27,10 +27,34 @@ isr_common_stub:
 	sti
 	iret
 
+irq_common_stub:
+    pusha 
+    mov ax, ds
+    push eax
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+
+    call IRQHandler
+    pop ebx
+
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
+    popa
+    add esp, 8
+    sti
+    iret 
+
 ;macro for generating ISR functions for the IDT to point to
 %macro ISR 1
 ;reference from c code
 global isr%1
+
+
 
 isr%1:
     cli
@@ -49,5 +73,23 @@ isr%1:
 %assign i 0
 %rep 256
 ISR i
+%assign i i+1
+%endrep
+
+%macro IRQ 1
+
+global irq%1
+
+irq%1:
+	cli
+	push byte %1
+	push byte 32 + i
+	jmp irq_common_stub
+
+%endmacro
+
+%assign i 0
+%rep 16
+IRQ i
 %assign i i+1
 %endrep

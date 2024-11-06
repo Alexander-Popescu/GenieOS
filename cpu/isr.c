@@ -3,6 +3,12 @@
 #include "../util/util.h"
 #include "idt.h"
 
+isr_t interrupt_handlers[256];
+
+void addInterruptHandler(uint8_t n, isr_t handler) {
+    interrupt_handlers[n] = handler;
+}
+
 void populateIDT();
 
 void initISR() {
@@ -17,6 +23,17 @@ void ISRHandler(registers_t r) {
     intToAscii(r.int_no, s);
     printString(s, -1, 0);
     printString("\n", -1, 0);
+}
+
+void IRQHandler(registers_t r) {
+    // end of interrupt command code, otherwise we wont get another interupt
+    if (r.int_no >= 40) wIO8(0xA0, 0x20);
+    wIO8(0x20, 0x20);
+
+    if (interrupt_handlers[r.int_no] != 0) {
+	isr_t handler = interrupt_handlers[r.int_no];
+	handler(r);
+    }
 }
 
 void populateIDT() {
@@ -53,22 +70,37 @@ void populateIDT() {
     fillIDTEntry(29, (uint32_t)isr29);
     fillIDTEntry(30, (uint32_t)isr30);
     fillIDTEntry(31, (uint32_t)isr31);
-    fillIDTEntry(32, (uint32_t)isr32);
-    fillIDTEntry(33, (uint32_t)isr33);
-    fillIDTEntry(34, (uint32_t)isr34);
-    fillIDTEntry(35, (uint32_t)isr35);
-    fillIDTEntry(36, (uint32_t)isr36);
-    fillIDTEntry(37, (uint32_t)isr37);
-    fillIDTEntry(38, (uint32_t)isr38);
-    fillIDTEntry(39, (uint32_t)isr39);
-    fillIDTEntry(40, (uint32_t)isr40);
-    fillIDTEntry(41, (uint32_t)isr41);
-    fillIDTEntry(42, (uint32_t)isr42);
-    fillIDTEntry(43, (uint32_t)isr43);
-    fillIDTEntry(44, (uint32_t)isr44);
-    fillIDTEntry(45, (uint32_t)isr45);
-    fillIDTEntry(46, (uint32_t)isr46);
-    fillIDTEntry(47, (uint32_t)isr47);
+
+	// Remap the PIC
+    wIO8(0x20, 0x11);
+    wIO8(0xA0, 0x11);
+    wIO8(0x21, 0x20);
+    wIO8(0xA1, 0x28);
+    wIO8(0x21, 0x04);
+    wIO8(0xA1, 0x02);
+    wIO8(0x21, 0x01);
+    wIO8(0xA1, 0x01);
+    wIO8(0x21, 0x0);
+    wIO8(0xA1, 0x0); 
+
+	
+    // interrupts 32 to 47 are mapped to IRQs
+    fillIDTEntry(32, (uint32_t)irq0);
+    fillIDTEntry(33, (uint32_t)irq1);
+    fillIDTEntry(34, (uint32_t)irq2);
+    fillIDTEntry(35, (uint32_t)irq3);
+    fillIDTEntry(36, (uint32_t)irq4);
+    fillIDTEntry(37, (uint32_t)irq5);
+    fillIDTEntry(38, (uint32_t)irq6);
+    fillIDTEntry(39, (uint32_t)irq7);
+    fillIDTEntry(40, (uint32_t)irq8);
+    fillIDTEntry(41, (uint32_t)irq9);
+    fillIDTEntry(42, (uint32_t)irq10);
+    fillIDTEntry(43, (uint32_t)irq11);
+    fillIDTEntry(44, (uint32_t)irq12);
+    fillIDTEntry(45, (uint32_t)irq13);
+    fillIDTEntry(46, (uint32_t)irq14);
+    fillIDTEntry(47, (uint32_t)irq15);
     fillIDTEntry(48, (uint32_t)isr48);
     fillIDTEntry(49, (uint32_t)isr49);
     fillIDTEntry(50, (uint32_t)isr50);

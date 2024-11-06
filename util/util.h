@@ -7,4 +7,10 @@ void intToAscii(int n, char str[]);
 
 void memoryCopy(const void* src, void* dest, unsigned int nbytes);
 
+void chrToLower(char *chr);
+void chrToUpper(char *chr);
+bool isNumeric(char chr);
+bool isAlpha(char chr);
+
+uint16_t strlength(char *str);
 #endif

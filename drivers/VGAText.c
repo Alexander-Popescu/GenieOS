@@ -46,6 +46,7 @@ void printError(uint8_t attribute) {
 	//prints a red E in the bottom right corner to indicate error
 	printChar('E', OFFSET_LIMIT, attribute);
 }
+
 uint16_t printChar(char c, int16_t offset, uint8_t attribute) {
 	if (c == '\n') {
 		//calculate new offset and set cursor
@@ -125,4 +126,18 @@ void printString(char* string, int16_t offset, uint8_t attribute) {
 			offset = getCursorOffset();
 		}
 	}
+}
+
+static void backspace() {
+    uint16_t offset = getCursorOffset();
+    if (offset > 0) {
+        printChar(' ', offset - 1, WHITE_ON_BLACK);
+        setCursorLocation(offset - 1);
+    }
+}
+
+void printBackspace(uint16_t count) {
+    for (int i = 0; i < count; i++) {
+        backspace();
+    }
 }

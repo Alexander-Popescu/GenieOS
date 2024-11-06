@@ -35,7 +35,7 @@ uint16_t printChar(char c, int16_t offset, uint8_t attribute);
 void setAttrib(uint8_t attribute, uint16_t offset);
 
 void printString(char* string, int16_t offset, uint8_t attribute);
+void printBackspace(uint16_t count);
 
 void scrollScreen();
-
 #endif

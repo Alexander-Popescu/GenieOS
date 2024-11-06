@@ -1,6 +1,8 @@
 #ifndef INTDEF_H
 #define INTDEF_H
 
+#include <stdbool.h>
+
 /* Exact-width integer types */
 typedef signed char int8_t;
 typedef short int int16_t;
