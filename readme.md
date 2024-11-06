@@ -8,4 +8,4 @@ GenieOS is designed to provide a host of features, such as opening a window or s
 
 ### Cost
 
-GenieOS will eventually cost upwards of $100,000 per installation or can be built from source
+The GenieOS license will need to be repurchased for each new installation or can be built from source. To incentivize public funding for the project, the source files contain various obfuscated errors that will prevent the build process from completing successfully without in depth knowledge on low level kernel development.
