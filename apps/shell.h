@@ -3,9 +3,18 @@
 
 #include "../drivers/keyboard.h"
 #include "../drivers/VGAText.h"
+
+#define inputBufferSize 256
+
 extern KB_STATE kb_state;
 
-void shellUpdate(uint8_t scancode);
+typedef struct {
+	//size of vga text mode window
+	char inputBuffer[inputBufferSize];
+	uint8_t inputIndex;
+} SHELL_STATE;
+
+void shellUpdate();
 
 void shellInit();
 

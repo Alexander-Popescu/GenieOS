@@ -12,5 +12,7 @@ void chrToUpper(char *chr);
 bool isNumeric(char chr);
 bool isAlpha(char chr);
 
+bool compareString(char *str1, char *str2);
+
 uint16_t strlength(char *str);
 #endif

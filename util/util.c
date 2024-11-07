@@ -60,3 +60,19 @@ bool isNumeric(char chr) {
 bool isAlpha(char chr) {
     return (chr >= 'A' && chr <= 'Z') || (chr >= 'a' && chr <= 'z');
 }
+
+bool compareString(char *str1, char *str2) {
+    //returns true / false if the two strings are the same
+    if (strlength(str1) != strlength(str2)) {
+        //early exit
+        return false;
+    }
+    int index = 0;
+    while (str1[index] == str2[index]) {
+        if(str1[index] == '\0') {
+            return true;
+        }
+        index++;
+    }
+    return false;
+}
