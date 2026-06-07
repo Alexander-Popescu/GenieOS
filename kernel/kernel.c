@@ -3,6 +3,7 @@
 #include "../cpu/timer.h"
 #include "../drivers/keyboard.h"
 #include "../apps/shell.h"
+#include "../tests/test_runner.h"
 
 void systemInit() {
     initScreen();
@@ -16,6 +17,7 @@ void systemInit() {
 }
 
 void main() {
+    runTests();
     systemInit();
     for (;;) {
         asm volatile("hlt");
