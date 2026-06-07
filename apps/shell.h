@@ -14,6 +14,7 @@ typedef struct {
 	uint8_t inputIndex;
 	int8_t wishes;
 	bool splashVisible;
+	uint32_t splashScrollOrigin;
 } SHELL_STATE;
 
 // Command function pointer

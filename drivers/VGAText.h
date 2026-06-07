@@ -60,4 +60,7 @@ void printString(char* string, int16_t offset, uint8_t attribute);
 void printBackspace(uint16_t count);
 
 void scrollScreen();
+
+extern uint32_t screenScrollCount;
+
 #endif

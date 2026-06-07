@@ -1,5 +1,7 @@
 #include "VGAText.h"
 
+uint32_t screenScrollCount = 0;
+
 int clearScreen() {
 	char *vRam = (char *)VRAM_START_ADDRESS;
 
@@ -53,8 +55,7 @@ uint16_t printChar(char c, int16_t offset, uint8_t attribute) {
 		if (currentOffset > (OFFSET_LIMIT - MAX_COLS))
 		{
 			scrollScreen();
-			offset = OFFSET_LIMIT - MAX_COLS + SHELL_MARGIN;
-			setCursorLocation(offset);
+			offset = getCursorOffset();
 			return offset;
 
 		} else {
@@ -98,6 +99,7 @@ void setAttrib(uint8_t attribute, uint16_t offset) {
 }
 
 void scrollScreen() {
+	screenScrollCount++;
     uint8_t* src = (uint8_t*)(VRAM_START_ADDRESS) + MAX_COLS * 2;
     uint8_t* dest = (uint8_t*)(VRAM_START_ADDRESS);
 

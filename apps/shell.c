@@ -122,6 +122,7 @@ static void drawSplash() {
   drawSplashFrame(SPLASH_ROWS);
   drawSplashArt();
   shell_state.splashVisible = true;
+  shell_state.splashScrollOrigin = screenScrollCount;
   setCursorLocation((SPLASH_TOP + SPLASH_ROWS + 2) * MAX_COLS);
 }
 
@@ -248,12 +249,20 @@ static void handleShellCommand(char *command) {
   if (found) {
     if (!isSplash) {
       if (shell_state.splashVisible) {
+        int currentRow = WISH_ROW - (screenScrollCount - shell_state.splashScrollOrigin);
+        if (currentRow < 0 || isClear) {
+            shell_state.splashVisible = false;
+        }
+      }
+      
+      if (shell_state.splashVisible) {
         uint16_t savedCursor = getCursorOffset();
-        stamp(WISH_ROW, WISH_COL, "Remaining Wishes: ", getWishColor());
+        int currentRow = WISH_ROW - (screenScrollCount - shell_state.splashScrollOrigin);
+        stamp(currentRow, WISH_COL, "Remaining Wishes: ", getWishColor());
         char ws[4];
         intToAscii(shell_state.wishes, ws);
-        stamp(WISH_ROW, WISH_COL + 18, ws, getWishColor());
-        stamp(WISH_ROW, WISH_COL + 19, " ", getWishColor());
+        stamp(currentRow, WISH_COL + 18, ws, getWishColor());
+        stamp(currentRow, WISH_COL + 19, " ", getWishColor());
         setCursorLocation(savedCursor);
       } else {
         char wishStr[4];
