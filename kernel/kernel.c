@@ -8,12 +8,16 @@ void systemInit() {
     initScreen();
     initISR();
     initKeyboard();
+    init_timer(100);
 
     // application initializations
     shellInit();
     asm volatile("sti");
 }
 
-int main() {
+void main() {
     systemInit();
+    for (;;) {
+        asm volatile("hlt");
+    }
 }

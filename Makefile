@@ -60,7 +60,7 @@ os-image.bin: $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
 	cat $^ > $@
 
 run: os-image.bin
-	qemu-system-i386 -fda $<
+	qemu-system-i386 -fda os-image.bin
 
 $(BUILD_DIR)/kernel.elf: $(BUILD_DIR)/kernel_entry.o $(KERNEL_OBJS) $(DRIVER_OBJS) $(UTIL_OBJS) $(CPU_OBJS) $(APPS_OBJS) $(BUILD_DIR)/interrupt.o
 	i386-elf-ld -o $@ -Ttext 0x1000 $^
