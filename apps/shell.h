@@ -10,9 +10,9 @@
 extern KB_STATE kb_state;
 
 typedef struct {
-	//size of vga text mode window
 	char inputBuffer[inputBufferSize];
 	uint8_t inputIndex;
+	int8_t wishes;
 } SHELL_STATE;
 
 // Command function pointer
