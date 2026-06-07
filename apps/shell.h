@@ -13,6 +13,7 @@ typedef struct {
 	char inputBuffer[inputBufferSize];
 	uint8_t inputIndex;
 	int8_t wishes;
+	bool splashVisible;
 } SHELL_STATE;
 
 // Command function pointer

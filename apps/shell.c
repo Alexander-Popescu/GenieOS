@@ -31,63 +31,103 @@ static void newCmdLine() {
   }
   shell_state.inputBuffer[0] = '\0';
 
-  printString("\n  Genie> ", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GREEN));
+  printString("\nGenie> ", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GREEN));
 }
 
-static void printSplash() {
-  clearScreen();
-  setCursorLocation(0);
+// ── splash screen ──────────────────────────────────────────────────
 
-  uint8_t frameColor = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
-  uint8_t titleColor = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-  uint8_t artColor1 = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_YELLOW);
-  uint8_t artColor2 = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN);
+#define SPLASH_TOP    1
+#define SPLASH_LEFT   2
+#define SPLASH_WIDTH  72
 
-  printString("\n  \xDA", -1, frameColor);
-  for (int i = 0; i < 70; i++) printChar('\xC4', -1, frameColor);
-  printString("\xBF\n", -1, frameColor);
-  printString("  \xB3                                                                      \xB3\n", -1, frameColor);
-  printString("  \xB3             ", -1, frameColor);
-  printString("\xB0", -1, artColor2);
-  printString("                                                        \xB3\n", -1, frameColor);
-  printString("  \xB3            ", -1, frameColor);
-  printString("\xB1\xB1\xB1", -1, artColor2);
-  printString("                    ", -1, frameColor);
-  printString("GenieOS v0.1", -1, titleColor);
-  printString("                       \xB3\n", -1, frameColor);
-  printString("  \xB3            ", -1, frameColor);
-  printString("\xB2\xB2\xB2\xB2\xB2", -1, artColor2);
-  printString("                                                     \xB3\n", -1, frameColor);
-  printString("  \xB3        ", -1, frameColor);
-  printString("\xDC\xDC\xDC\xDC\xDC\xDC\xDC\xDC\xDC\xDC\xDC", -1, artColor1);
-  printString("           LampShell Interactive                   \xB3\n", -1, frameColor);
-  printString("  \xB3         ", -1, frameColor);
-  printString("\xDE\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDD", -1, artColor1);
-  printString("                                                \xB3\n", -1, frameColor);
-  printString("  \xB3        ", -1, frameColor);
-  printString("\xDF\xDF\xDF\xDF\xDB\xDB\xDF\xDF\xDF", -1, artColor1);
-  printString("                                                     \xB3\n", -1, frameColor);
-  printString("  \xB3       ", -1, frameColor);
-  printString("\xDC\xDC\xDC\xDC\xDC\xDB\xDB\xDC\xDC\xDC\xDC\xDC", -1, artColor1);
+static void stamp(int row, int col, char *str, uint8_t attr) {
+  printString(str, row * MAX_COLS + col, attr);
+}
+
+static void drawSplashFrame(int contentRows) {
+  uint8_t f = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
+  int T = SPLASH_TOP;
+  int L = SPLASH_LEFT;
+  int R = L + SPLASH_WIDTH - 1;
+
+  printChar('\xDA', T * MAX_COLS + L, f);
+  for (int i = 1; i < SPLASH_WIDTH - 1; i++)
+    printChar('\xC4', T * MAX_COLS + L + i, f);
+  printChar('\xBF', T * MAX_COLS + R, f);
+
+  for (int r = 1; r <= contentRows; r++) {
+    printChar('\xB3', (T + r) * MAX_COLS + L, f);
+    printChar('\xB3', (T + r) * MAX_COLS + R, f);
+  }
+
+  printChar('\xC0', (T + contentRows + 1) * MAX_COLS + L, f);
+  for (int i = 1; i < SPLASH_WIDTH - 1; i++)
+    printChar('\xC4', (T + contentRows + 1) * MAX_COLS + L + i, f);
+  printChar('\xD9', (T + contentRows + 1) * MAX_COLS + R, f);
+}
+
+#define SPLASH_ROWS   11
+#define WISH_ROW      8
+#define WISH_COL      43
+
+static void drawSplashArt() {
+  uint8_t S = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN);
+  uint8_t L = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_YELLOW);
+  uint8_t T = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+  uint8_t B = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
+  uint8_t W = getWishColor();
+
+  //        col:  4    8   12   16   20   24   28   32   36   40
+  //               |    |    |    |    |    |    |    |    |    |
+  //
+  //  handle (left side)
+  /*  5 */  stamp( 7,  8,  "\xDB\xDF\xDF\xDF",                               L);
+  /*  6 */  stamp( 8,  9,  "\xDF\xDF\xDF\xDC",                               L);
+  //
+  //  lid + neck
+  /*  5 */  stamp( 7, 16,  "\xDC\xDB\xDB\xDB\xDB\xDC",                   L);
+  //
+  //  body (flat top, no shoulders)
+  /*  6 */  stamp( 8, 14,  "\xDC\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDC",  L);
+  /*  7 */  stamp( 9, 13,  "\xDE\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDF", L);
+  //
+  //
+  //  body bottom + stand
+  /*  8 */  stamp( 10, 14,  "\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF",      L);
+  /*  9 */  stamp( 10, 16,  "\xDB\xDB\xDB\xDB\xDB\xDB\xDB",                   L);
+  //
+  //  base
+  /* 11 */  stamp(11, 13,  "\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF", L);
+  //
+  //  smoke (rises from spout, gap then wavy upward)
+  /*  2 */  stamp( 3, 32,  "\xB0\xB0\xB0\xB0",                               S);
+  /*  2 */  stamp( 3, 44,  "Welcome to GenieOS",                                   T);
+  /*  3 */  stamp( 4, 30,  "\xB0\xB1\xB1\xB1\xB0",                           S);
+  /*  4 */  stamp( 5, 29,  "\xB0\xB1\xB2\xB2\xB1\xB0",                       S);
+  /*  5 */  stamp( 6, 28,  "\xB1\xB2\xB2\xB1",                               S);
+  /*  5 */  stamp( 5, 45,  "LampShell v0.1",                           B);
+  /*  6 */  stamp( 7, 28,  "\xB1\xB2\xB1",                                   S);
+  /*  7 */  stamp( 8, 28,  "\xB2",                                           S);
+
+  // wish counter on base row
+  stamp(WISH_ROW, WISH_COL, "Remaining Wishes: ", W);
   char wishStr[4];
   intToAscii(shell_state.wishes, wishStr);
-  printString("             Remaining Wishes: ", -1, getWishColor());
-  printString(wishStr, -1, getWishColor());
-  printString("                   \xB3\n", -1, frameColor);
-  printString("  \xB3         ", -1, frameColor);
-  printString("\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF", -1, artColor1);
-  printString("                                                \xB3\n", -1, frameColor);
+  stamp(WISH_ROW, WISH_COL + 18, wishStr, W);
+}
 
-  printString("  \xB3                                                                      \xB3\n", -1, frameColor);
-
-  printString("  \xC0", -1, frameColor);
-  for (int i = 0; i < 70; i++) printChar('\xC4', -1, frameColor);
-  printString("\xD9\n\n", -1, frameColor);
+static void drawSplash() {
+  clearScreen();
+  setCursorLocation(0);
+  drawSplashFrame(SPLASH_ROWS);
+  drawSplashArt();
+  shell_state.splashVisible = true;
+  setCursorLocation((SPLASH_TOP + SPLASH_ROWS + 2) * MAX_COLS);
 }
 
 void shellInit() {
   shell_state.wishes = 3;
-  printSplash();
+  drawSplash();
   newCmdLine();
 }
 
@@ -177,10 +217,11 @@ static void cmd_help() {
 static void cmd_clear() {
   clearScreen();
   setCursorLocation(0);
+  shell_state.splashVisible = false;
 }
 
 static void cmd_splash() {
-  printSplash();
+  drawSplash();
 }
 
 static void handleShellCommand(char *command) {
@@ -191,10 +232,12 @@ static void handleShellCommand(char *command) {
   
   bool found = false;
   bool isSplash = false;
+  bool isClear = false;
   for (int i = 0; i < NUM_COMMANDS; i++) {
       ShellCommand cmd = get_command(i);
       if (compareString(command, cmd.name)) {
           isSplash = compareString(cmd.name, "splash");
+          isClear = compareString(cmd.name, "clear");
           if (shell_state.wishes > 0) shell_state.wishes--;
           cmd.execute();
           found = true;
@@ -204,10 +247,20 @@ static void handleShellCommand(char *command) {
 
   if (found) {
     if (!isSplash) {
-      char wishStr[4];
-      intToAscii(shell_state.wishes, wishStr);
-      printString("\nRemaining Wishes: ", -1, getWishColor());
-      printString(wishStr, -1, getWishColor());
+      if (shell_state.splashVisible) {
+        uint16_t savedCursor = getCursorOffset();
+        stamp(WISH_ROW, WISH_COL, "Remaining Wishes: ", getWishColor());
+        char ws[4];
+        intToAscii(shell_state.wishes, ws);
+        stamp(WISH_ROW, WISH_COL + 18, ws, getWishColor());
+        stamp(WISH_ROW, WISH_COL + 19, " ", getWishColor());
+        setCursorLocation(savedCursor);
+      } else {
+        char wishStr[4];
+        intToAscii(shell_state.wishes, wishStr);
+        printString("\nRemaining Wishes: ", -1, getWishColor());
+        printString(wishStr, -1, getWishColor());
+      }
     }
   } else {
     printString("\nCommand '", -1, 0);

@@ -49,18 +49,16 @@ void printError(uint8_t attribute) {
 
 uint16_t printChar(char c, int16_t offset, uint8_t attribute) {
 	if (c == '\n') {
-		//calculate new offset and set cursor
 		uint16_t currentOffset = getCursorOffset();
 		if (currentOffset > (OFFSET_LIMIT - MAX_COLS))
 		{
-			//last line edgecase
 			scrollScreen();
-			offset = OFFSET_LIMIT - MAX_COLS + 1;
+			offset = OFFSET_LIMIT - MAX_COLS + SHELL_MARGIN;
 			setCursorLocation(offset);
 			return offset;
 
 		} else {
-			uint16_t offset = (currentOffset - (currentOffset % MAX_COLS)) + MAX_COLS;
+			uint16_t offset = (currentOffset - (currentOffset % MAX_COLS)) + MAX_COLS + SHELL_MARGIN;
 			setCursorLocation(offset);
 			return offset;
 		}
@@ -110,7 +108,7 @@ void scrollScreen() {
 		printChar(' ', MAX_COLS * (MAX_ROWS - 1) + i, 0);
 	}
 
-	setCursorLocation(MAX_COLS * (MAX_ROWS - 1));
+	setCursorLocation(MAX_COLS * (MAX_ROWS - 1) + SHELL_MARGIN);
 
 }
 

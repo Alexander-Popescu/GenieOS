@@ -63,7 +63,21 @@ $(BUILD_DIR)/kernel.dis: $(BUILD_DIR)/kernel.bin
 $(BUILD_DIR)/boot.bin: $(BOOT_DIR)/boot.asm | $(BUILD_DIR)
 	nasm -I$(BOOT_DIR) $< -f bin -o $@
 
+# sector count must match 'mov dh, N' in boot.asm
+BOOT_SECTORS = 40
+STACK_LIMIT = 32256
+
 os-image.bin: $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
+	@KSIZE=$$(stat -f%z $(BUILD_DIR)/kernel.bin); \
+	 MAX=$$(($(BOOT_SECTORS) * 512)); \
+	 if [ $$KSIZE -gt $$MAX ]; then \
+	   echo "kernel.bin is $$KSIZE bytes, bootloader only loads $$MAX"; \
+	   echo "  bump 'mov dh' in boot.asm to at least $$(( ($$KSIZE + 511) / 512 ))"; \
+	   exit 1; \
+	 fi; \
+	 if [ $$KSIZE -gt $(STACK_LIMIT) ]; then \
+	   echo "heads up: kernel.bin ($$KSIZE bytes) is getting close to the stack at 0x9000"; \
+	 fi
 	cat $^ > $@
 	truncate -s 1474560 $@
 

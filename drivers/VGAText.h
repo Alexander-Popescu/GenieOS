@@ -41,6 +41,7 @@
 
 //misc
 #define OFFSET_LIMIT MAX_COLS * MAX_ROWS - 1
+#define SHELL_MARGIN 2
 
 #include "../util/intdef.h"
 #include "../drivers/IOports.h"
