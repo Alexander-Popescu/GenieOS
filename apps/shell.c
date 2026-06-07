@@ -18,99 +18,68 @@ static void shellBackspace(uint8_t count, bool erase) {
 }
 
 static void newCmdLine() {
-  shellBackspace(shell_state.inputIndex, false);
-  // Green prompt, light gray background, for a modern look
-  printString("\nGenie> ", -1,
-              VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GREEN));
+  while (shell_state.inputIndex > 0) {
+      shell_state.inputIndex--;
+      shell_state.inputBuffer[shell_state.inputIndex] = '\0';
+  }
+  shell_state.inputBuffer[0] = '\0';
+
+  printString("\nGenie> ", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GREEN));
 }
 
 static void printSplash() {
   clearScreen();
   setCursorLocation(0);
 
-  // Using Extended ASCII block characters for TUI frame and graphics
-  // Frame color: Blue, Text: White, Art: Yellow/Cyan
   uint8_t frameColor = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
   uint8_t titleColor = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
   uint8_t artColor1 = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_YELLOW);
   uint8_t artColor2 = VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN);
 
-  // CP437 Box drawing characters
-  // \xDA = top left, \xBF = top right, \xC0 = bottom left, \xD9 = bottom right
-  // \xC4 = horizontal line, \xB3 = vertical line
-
-  // Total inner width is 70 characters.
-
-  // Top border
   printString("\n  \xDA", -1, frameColor);
-  for (int i = 0; i < 70; i++)
-    printChar('\xC4', -1, frameColor);
+  for (int i = 0; i < 70; i++) printChar('\xC4', -1, frameColor);
   printString("\xBF\n", -1, frameColor);
 
-  // Empty line (1 + 70 + 1)
-  printString("  \xB3                                                          "
-              "            \xB3\n",
-              -1, frameColor);
+  printString("  \xB3                                                                      \xB3\n", -1, frameColor);
 
-  // Art line 1
   printString("  \xB3               ", -1, frameColor);
   printString("\xB0", -1, artColor2);
-  printString("                                                      \xB3\n",
-              -1, frameColor);
+  printString("                                                      \xB3\n", -1, frameColor);
 
-  // Art line 2
   printString("  \xB3              ", -1, frameColor);
   printString("\xB1\xB1\xB1", -1, artColor2);
   printString("                    ", -1, frameColor);
   printString("GenieOS v0.1", -1, titleColor);
   printString("                    \xB3\n", -1, frameColor);
 
-  // Art line 3
   printString("  \xB3             ", -1, frameColor);
   printString("\xB2\xB2\xB2\xB2\xB2", -1, artColor2);
-  printString("                                                   \xB3\n", -1,
-              frameColor);
+  printString("                                                   \xB3\n", -1, frameColor);
 
-  // Art line 4
   printString("  \xB3          ", -1, frameColor);
   printString("\xDC\xDC\xDC\xDC\xDC\xDC\xDC\xDC\xDC\xDC\xDC", -1, artColor1);
   printString("       LampShell Interactive           \xB3\n", -1, frameColor);
 
-  // Art line 5
   printString("  \xB3         ", -1, frameColor);
-  printString("\xDE\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDD", -1,
-              artColor1);
-  printString("                                              \xB3\n", -1,
-              frameColor);
+  printString("\xDE\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDD", -1, artColor1);
+  printString("                                              \xB3\n", -1, frameColor);
 
-  // Art line 6
   printString("  \xB3          ", -1, frameColor);
   printString("\xDF\xDF\xDF\xDF\xDB\xDB\xDF\xDF\xDF", -1, artColor1);
-  printString("                                                \xB3\n", -1,
-              frameColor);
+  printString("                                                \xB3\n", -1, frameColor);
 
-  // Art line 7
   printString("  \xB3         ", -1, frameColor);
-  printString("\xDC\xDC\xDC\xDC\xDC\xDB\xDB\xDC\xDC\xDC\xDC\xDC", -1,
-              artColor1);
+  printString("\xDC\xDC\xDC\xDC\xDC\xDB\xDB\xDC\xDC\xDC\xDC\xDC", -1, artColor1);
   printString("       Ready to serve.                 \xB3\n", -1, frameColor);
 
-  // Art line 8
   printString("  \xB3         ", -1, frameColor);
-  printString("\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF", -1,
-              artColor1);
-  printString("                                              \xB3\n", -1,
-              frameColor);
+  printString("\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF\xDF", -1, artColor1);
+  printString("                                              \xB3\n", -1, frameColor);
 
-  // Empty line
-  printString("  \xB3                                                          "
-              "            \xB3\n",
-              -1, frameColor);
+  printString("  \xB3                                                                      \xB3\n", -1, frameColor);
 
-  // Bottom border
   printString("  \xC0", -1, frameColor);
-  for (int i = 0; i < 70; i++)
-    printChar('\xC4', -1, frameColor);
+  for (int i = 0; i < 70; i++) printChar('\xC4', -1, frameColor);
   printString("\xD9\n\n", -1, frameColor);
 }
 
@@ -158,53 +127,98 @@ static void handleCharInput(uint8_t scancode) {
   }
 }
 
-static void handleShellCommand(char *command) {
-  // clean input, TODO
-  if (compareString(command, "clear")) {
-    // probably can be made better,but starts a new CmdLine on the first row
-    clearScreen();
-    shellBackspace(shell_state.inputIndex, false);
-    setCursorLocation(0);
-  } else if (compareString(command, "help")) {
-    printString("\nLampShell built-in commands:\n", -1,
-                VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GRAY));
-    printString("  help    - Show this help message\n", -1,
-                VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN));
-    printString("  clear   - Clear the terminal screen\n", -1,
-                VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN));
-    printString("  splash  - Display the GenieOS splash art\n", -1,
-                VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN));
-  } else if (compareString(command, "splash")) {
-    printSplash();
-  } else {
-    if (*command != '\0') { // exception: empty input buffer
-      // pass in the input if the command wasnt found, default branch
-      printString("\nCommand '", -1, 0);
-      printString(command, -1, 0);
-      printString("' not found.", -1, 0);
+static void cmd_help();
+static void cmd_clear();
+static void cmd_splash();
+
+#define NUM_COMMANDS 3
+
+static ShellCommand get_command(int index) {
+    ShellCommand cmd;
+    switch (index) {
+        case 0:
+            cmd.name = "help";
+            cmd.description = "Show this help message";
+            cmd.execute = cmd_help;
+            break;
+        case 1:
+            cmd.name = "clear";
+            cmd.description = "Clear the terminal screen";
+            cmd.execute = cmd_clear;
+            break;
+        case 2:
+            cmd.name = "splash";
+            cmd.description = "Display the GenieOS splash art";
+            cmd.execute = cmd_splash;
+            break;
     }
+    return cmd;
+}
+
+static void cmd_help() {
+  printString("\nLampShell built-in commands:\n", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GRAY));
+  for (int i = 0; i < NUM_COMMANDS; i++) {
+    ShellCommand cmd = get_command(i);
+    printString("  ", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN));
+    printString(cmd.name, -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN));
+    int padding = 10 - strlength(cmd.name);
+    for (int p = 0; p < padding; p++) {
+        printString(" ", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN));
+    }
+    printString("- ", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN));
+    printString(cmd.description, -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN));
+    printString("\n", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_CYAN));
   }
+}
+
+static void cmd_clear() {
+  clearScreen();
+  setCursorLocation(0);
+}
+
+static void cmd_splash() {
+  printSplash();
+}
+
+static void handleShellCommand(char *command) {
+  if (shell_state.inputIndex == 0) {
+      newCmdLine();
+      return;
+  }
+  
+  bool found = false;
+  for (int i = 0; i < NUM_COMMANDS; i++) {
+      ShellCommand cmd = get_command(i);
+      if (compareString(command, cmd.name)) {
+          cmd.execute();
+          found = true;
+          break;
+      }
+  }
+
+  if (!found) {
+    printString("\nCommand '", -1, 0);
+    printString(command, -1, 0);
+    printString("' not found.", -1, 0);
+  }
+  
   newCmdLine();
 }
 
 void shellUpdate() {
-  // pull last input from keyboard buffer, assume update was called on keypress
   uint8_t scancode = kb_state.inputs[kb_state.index];
 
-  // check backspace keycode
+  // Ignore key release events
+  if (scancode & 0x80) return;
+
   if (scancode == 0x0E) {
-    // also updates VGAText buffer to reflect backspace
     shellBackspace(1, true);
     return;
   }
-  // enter key for testing
   if (scancode == 0x1C) {
     handleShellCommand(shell_state.inputBuffer);
     return;
   }
 
-  // also prints inputs to VGAText buffer
   handleCharInput(scancode);
-
-  return;
 }

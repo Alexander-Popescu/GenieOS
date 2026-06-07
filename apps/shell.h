@@ -5,6 +5,7 @@
 #include "../drivers/VGAText.h"
 
 #define inputBufferSize 256
+#define MAX_COMMANDS 32
 
 extern KB_STATE kb_state;
 
@@ -14,8 +15,17 @@ typedef struct {
 	uint8_t inputIndex;
 } SHELL_STATE;
 
-void shellUpdate();
+// Command function pointer
+typedef void (*CommandFunc)(void);
 
+typedef struct {
+    char *name;
+    char *description;
+    CommandFunc execute;
+} ShellCommand;
+
+void register_command(char *name, char *description, CommandFunc execute);
+void shellUpdate();
 void shellInit();
 
 #endif
