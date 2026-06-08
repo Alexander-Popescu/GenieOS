@@ -176,25 +176,26 @@ static void cmd_clear();
 static void cmd_splash();
 static void cmd_graphics();
 static void cmd_showcat();
+static void cmd_exit();
 
-#define NUM_COMMANDS 5
+#define NUM_COMMANDS 6
 
 static ShellCommand get_command(int index) {
     ShellCommand cmd;
     switch (index) {
         case 0:
             cmd.name = "help";
-            cmd.description = "Show this help message";
+            cmd.description = "Shows help message";
             cmd.execute = cmd_help;
             break;
         case 1:
             cmd.name = "clear";
-            cmd.description = "Clear the terminal screen";
+            cmd.description = "Clears terminal";
             cmd.execute = cmd_clear;
             break;
         case 2:
             cmd.name = "splash";
-            cmd.description = "Display the GenieOS splash art";
+            cmd.description = "GenieOS exclusive Neofetch";
             cmd.execute = cmd_splash;
             break;
         case 3:
@@ -204,8 +205,13 @@ static ShellCommand get_command(int index) {
             break;
         case 4:
             cmd.name = "showcat";
-            cmd.description = "Render the cat image in graphics mode";
+            cmd.description = "Shows cat";
             cmd.execute = cmd_showcat;
+            break;
+        case 5:
+            cmd.name = "exit";
+            cmd.description = "Exit GenieOS";
+            cmd.execute = cmd_exit;
             break;
     }
     return cmd;
@@ -240,6 +246,11 @@ static void cmd_splash() {
 #include "../drivers/VGAModes.h"
 #include "../cpu/timer.h"
 #include "cat_image.h"
+#include "../drivers/IOports.h"
+
+static void cmd_exit() {
+    wIO16(0x604, 0x2000);
+}
 
 static void cmd_graphics() {
     // Save cursor and text buffer
@@ -281,6 +292,39 @@ static void cmd_showcat() {
     shell_state.inGraphicsMode = true;
 }
 
+static void checkWishesAndCorrupt() {
+    if (shell_state.wishes == 0 && !shell_state.corrupted) {
+        shell_state.corrupted = true;
+        printString("\n\nYou have exhausted your wishes. Please repurchase your GenieOS license at https://GenieOS.org", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_RED));
+        
+        //busy wait
+        for (volatile uint32_t i = 0; i < 1200000000; i++) {
+            asm volatile("nop");
+        }
+
+        // Floppy motor on
+        wIO8(0x3F2, 0x1C);
+        for (int i = 0; i < 5000000; i++) asm volatile("nop"); // Spin up delay
+
+        // Write "Write Data" command (0xC5) to Floppy Data FIFO
+        wIO8(0x3F5, 0xC5);
+        wIO8(0x3F5, 0x00); // Drive 0, Head 0
+        wIO8(0x3F5, 0x00); // Cylinder 0
+        wIO8(0x3F5, 0x00); // Head 0
+        wIO8(0x3F5, 0x01); // Sector 1
+        wIO8(0x3F5, 0x02); // 512 bytes
+        wIO8(0x3F5, 0x12); // EOT (last sector in track)
+        wIO8(0x3F5, 0x1B); // GAP3 length
+        wIO8(0x3F5, 0xFF); // Data length (when N=0)
+        
+        // Wait a moment for write
+        for (int i = 0; i < 5000000; i++) asm volatile("nop");
+        
+        // Shutdown
+        wIO16(0x604, 0x2000);
+    }
+}
+
 static void handleShellCommand(char *command) {
   if (shell_state.inputIndex == 0) {
       newCmdLine();
@@ -300,6 +344,11 @@ static void handleShellCommand(char *command) {
           found = true;
           break;
       }
+  }
+
+  if (!shell_state.inGraphicsMode) {
+      checkWishesAndCorrupt();
+      if (shell_state.corrupted) return;
   }
 
   if (found) {
@@ -378,6 +427,9 @@ void shellUpdate() {
     }
     shell_state.inputBuffer[0] = '\0';
     
+    checkWishesAndCorrupt();
+    if (shell_state.corrupted) return;
+
     printString("\nGenie> ", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GREEN));
     return;
   }

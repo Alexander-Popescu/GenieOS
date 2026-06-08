@@ -13,6 +13,7 @@ typedef struct {
 	char inputBuffer[inputBufferSize];
 	uint8_t inputIndex;
 	int8_t wishes;
+	bool corrupted;
 	bool splashVisible;
 	uint32_t splashScrollOrigin;
 	bool inGraphicsMode;

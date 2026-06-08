@@ -6,7 +6,7 @@
 #define CLOCK_RATE 1193182
 #define PIT_FREQUENCY 100
 
-static uint32_t tick = 0;
+static volatile uint32_t tick = 0;
 
 static void timer_callback(registers_t regs) {
 	tick++;
