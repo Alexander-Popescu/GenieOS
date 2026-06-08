@@ -242,6 +242,10 @@ static void cmd_splash() {
 #include "cat_image.h"
 
 static void cmd_graphics() {
+    // Save cursor and text buffer
+    shell_state.savedCursor = getCursorOffset();
+    memoryCopy((uint8_t *)0xB8000, shell_state.textBufferBackup, 4000);
+
     vga_save_font();
     enter_graphics_mode();
 
@@ -255,6 +259,10 @@ static void cmd_graphics() {
 }
 
 static void cmd_showcat() {
+    // Save cursor and text buffer
+    shell_state.savedCursor = getCursorOffset();
+    memoryCopy((uint8_t *)0xB8000, shell_state.textBufferBackup, 4000);
+
     vga_save_font();
     enter_graphics_mode();
 
@@ -344,9 +352,33 @@ void shellUpdate() {
     enter_text_mode();
     vga_restore_font();
     vga_restore_palette();
-    cmd_clear();
-    cmd_splash();
-    newCmdLine();
+
+    // Restore text buffer and cursor position
+    memoryCopy(shell_state.textBufferBackup, (uint8_t *)0xB8000, 4000);
+    setCursorLocation(shell_state.savedCursor);
+    
+    // Update wish counter if splash is still visible
+    if (shell_state.splashVisible) {
+        uint16_t currentCursor = getCursorOffset();
+        int currentRow = WISH_ROW - (screenScrollCount - shell_state.splashScrollOrigin);
+        if (currentRow >= 0) {
+            stamp(currentRow, WISH_COL, "Remaining Wishes: ", getWishColor());
+            char ws[4];
+            intToAscii(shell_state.wishes, ws);
+            stamp(currentRow, WISH_COL + 18, ws, getWishColor());
+            stamp(currentRow, WISH_COL + 19, " ", getWishColor());
+        }
+        setCursorLocation(currentCursor);
+    }
+    
+    // Clear the input buffer from the old command
+    while (shell_state.inputIndex > 0) {
+      shell_state.inputIndex--;
+      shell_state.inputBuffer[shell_state.inputIndex] = '\0';
+    }
+    shell_state.inputBuffer[0] = '\0';
+    
+    printString("\nGenie> ", -1, VGA_ATTR(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_GREEN));
     return;
   }
 

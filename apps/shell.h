@@ -16,6 +16,8 @@ typedef struct {
 	bool splashVisible;
 	uint32_t splashScrollOrigin;
 	bool inGraphicsMode;
+	uint16_t savedCursor;
+	uint8_t textBufferBackup[4000];
 } SHELL_STATE;
 
 // Command function pointer
