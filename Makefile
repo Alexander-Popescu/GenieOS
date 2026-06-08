@@ -64,8 +64,8 @@ $(BUILD_DIR)/boot.bin: $(BOOT_DIR)/boot.asm | $(BUILD_DIR)
 	nasm -I$(BOOT_DIR) $< -f bin -o $@
 
 # sector count must match 'mov dh, N' in boot.asm
-BOOT_SECTORS = 55
-STACK_LIMIT = 32256
+BOOT_SECTORS = 200
+STACK_LIMIT = 114688
 
 os-image.bin: $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
 	@KSIZE=$$(stat -f%z $(BUILD_DIR)/kernel.bin); \

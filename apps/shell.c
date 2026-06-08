@@ -175,8 +175,9 @@ static void cmd_help();
 static void cmd_clear();
 static void cmd_splash();
 static void cmd_graphics();
+static void cmd_showcat();
 
-#define NUM_COMMANDS 4
+#define NUM_COMMANDS 5
 
 static ShellCommand get_command(int index) {
     ShellCommand cmd;
@@ -200,6 +201,11 @@ static ShellCommand get_command(int index) {
             cmd.name = "graphics";
             cmd.description = "Test VGA graphics mode (320x200)";
             cmd.execute = cmd_graphics;
+            break;
+        case 4:
+            cmd.name = "showcat";
+            cmd.description = "Render the cat image in graphics mode";
+            cmd.execute = cmd_showcat;
             break;
     }
     return cmd;
@@ -233,17 +239,35 @@ static void cmd_splash() {
 
 #include "../drivers/VGAModes.h"
 #include "../cpu/timer.h"
+#include "cat_image.h"
 
 static void cmd_graphics() {
     vga_save_font();
     enter_graphics_mode();
 
-    // Draw a basic colorful test pattern
+    // Clear screen to black as a placeholder
     uint8_t *vga_mem = (uint8_t *)0xA0000;
-    for (int y = 0; y < 200; y++) {
-        for (int x = 0; x < 320; x++) {
-            vga_mem[y * 320 + x] = (x ^ y) & 0xFF; // XOR pattern
-        }
+    for (int i = 0; i < 320 * 200; i++) {
+        vga_mem[i] = 0;
+    }
+
+    shell_state.inGraphicsMode = true;
+}
+
+static void cmd_showcat() {
+    vga_save_font();
+    enter_graphics_mode();
+
+    // Load custom 256-color palette
+    wIO8(0x3C8, 0); // Start at color index 0
+    for (int i = 0; i < 768; i++) {
+        wIO8(0x3C9, cat_palette[i]);
+    }
+
+    // Draw the image
+    uint8_t *vga_mem = (uint8_t *)0xA0000;
+    for (int i = 0; i < 320 * 200; i++) {
+        vga_mem[i] = cat_pixels[i];
     }
 
     shell_state.inGraphicsMode = true;

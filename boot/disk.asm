@@ -1,5 +1,6 @@
 ; Reads DH sectors from drive DL into ES:BX, starting at CHS 0/0/2
 ; Handles track and head boundaries (18 sectors/track, 2 heads)
+; Handles 64KB segment boundaries (BX overflow)
 loadKernel:
     pusha
     mov cl, 2           ; starting sector
@@ -16,7 +17,15 @@ loadKernel:
     int 0x13
     jc disk_error
     dec byte [dk_n]
+    
+    ; Advance memory pointer (ES:BX)
     add bx, 0x200
+    jnc .no_overflow    ; If BX didn't overflow past 0xFFFF, skip segment update
+    mov ax, es
+    add ax, 0x1000      ; Advance ES by 4096 segments (64KB)
+    mov es, ax
+.no_overflow:
+
     inc cl
     cmp cl, 19          ; sectors 1-18 per track
     jb .read

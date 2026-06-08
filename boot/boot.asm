@@ -18,7 +18,7 @@
 	mov ax, 0x1000
 	mov es, ax
 	mov bx, 0
-	mov dh, 55
+	mov dh, 200
 	mov dl, [BOOT_DRIVE]
 	call loadKernel
 
