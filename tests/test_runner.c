@@ -12,10 +12,6 @@ void runTests() {
     TEST_CONTEXT ctx = {0, 0, 0};
     initSerial();
 
-    serialWriteString("==============================\n");
-    serialWriteString("  GenieOS Unit Tests\n");
-    serialWriteString("==============================\n");
-
     TEST_SUITE suites[] = {
         {"util", testUtilSuite},
     };

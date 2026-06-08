@@ -2,9 +2,10 @@
 #include "serial.h"
 
 void runSuite(TEST_CONTEXT *ctx, char *suiteName, TEST_CASE *tests, int count) {
-    serialWriteString("--- ");
     serialWriteString(suiteName);
-    serialWriteString(" ---\n");
+    serialWriteString(": ");
+
+    int failuresBefore = ctx->failed;
 
     for (int i = 0; i < count; i++) {
         bool result = tests[i].run();
@@ -12,24 +13,28 @@ void runSuite(TEST_CONTEXT *ctx, char *suiteName, TEST_CASE *tests, int count) {
 
         if (result) {
             ctx->passed++;
-            serialWriteString("  [PASS] ");
         } else {
             ctx->failed++;
-            serialWriteString("  [FAIL] ");
+            if (ctx->failed - failuresBefore == 1) {
+                serialWriteChar('\n');
+            }
+            serialWriteString("  FAIL: ");
+            serialWriteString(tests[i].name);
+            serialWriteChar('\n');
         }
-        serialWriteString(tests[i].name);
-        serialWriteChar('\n');
+    }
+
+    if (ctx->failed == failuresBefore) {
+        serialWriteString("OK\n");
     }
 }
 
 void testSummary(TEST_CONTEXT *ctx) {
-    serialWriteString("==============================\n");
-    serialWriteString("  ");
+    serialWriteString("Result: ");
     serialWriteInt(ctx->passed);
     serialWriteString(" passed, ");
     serialWriteInt(ctx->failed);
     serialWriteString(" failed, ");
     serialWriteInt(ctx->run);
     serialWriteString(" total\n");
-    serialWriteString("==============================\n");
 }
