@@ -15,8 +15,10 @@
 	mov bx, KERNEL_LOAD_MESSAGE
 	call printString
 
-	mov bx, KERNEL_OFFSET
-	mov dh, 40
+	mov ax, 0x1000
+	mov es, ax
+	mov bx, 0
+	mov dh, 55
 	mov dl, [BOOT_DRIVE]
 	call loadKernel
 
@@ -80,7 +82,7 @@ SUCCESS_MESSAGE:
 BOOT_DRIVE:
 	db 0
 
-KERNEL_OFFSET equ 0x1000
+KERNEL_OFFSET equ 0x10000
 
 ;boot sector padding
 times 510-($-$$) db 0

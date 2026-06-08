@@ -174,8 +174,9 @@ static void handleCharInput(uint8_t scancode) {
 static void cmd_help();
 static void cmd_clear();
 static void cmd_splash();
+static void cmd_graphics();
 
-#define NUM_COMMANDS 3
+#define NUM_COMMANDS 4
 
 static ShellCommand get_command(int index) {
     ShellCommand cmd;
@@ -194,6 +195,11 @@ static ShellCommand get_command(int index) {
             cmd.name = "splash";
             cmd.description = "Display the GenieOS splash art";
             cmd.execute = cmd_splash;
+            break;
+        case 3:
+            cmd.name = "graphics";
+            cmd.description = "Test VGA graphics mode (320x200)";
+            cmd.execute = cmd_graphics;
             break;
     }
     return cmd;
@@ -223,6 +229,24 @@ static void cmd_clear() {
 
 static void cmd_splash() {
   drawSplash();
+}
+
+#include "../drivers/VGAModes.h"
+#include "../cpu/timer.h"
+
+static void cmd_graphics() {
+    vga_save_font();
+    enter_graphics_mode();
+
+    // Draw a basic colorful test pattern
+    uint8_t *vga_mem = (uint8_t *)0xA0000;
+    for (int y = 0; y < 200; y++) {
+        for (int x = 0; x < 320; x++) {
+            vga_mem[y * 320 + x] = (x ^ y) & 0xFF; // XOR pattern
+        }
+    }
+
+    shell_state.inGraphicsMode = true;
 }
 
 static void handleShellCommand(char *command) {
@@ -277,7 +301,9 @@ static void handleShellCommand(char *command) {
     printString("' not found.", -1, 0);
   }
   
-  newCmdLine();
+  if (!shell_state.inGraphicsMode) {
+      newCmdLine();
+  }
 }
 
 void shellUpdate() {
@@ -285,6 +311,20 @@ void shellUpdate() {
 
   // Ignore key release events
   if (scancode & 0x80) return;
+
+  // If in graphics mode, wait exclusively for the 'q' key (scancode 0x10)
+  if (shell_state.inGraphicsMode) {
+    if (scancode != 0x10) return;
+
+    shell_state.inGraphicsMode = false;
+    enter_text_mode();
+    vga_restore_font();
+    vga_restore_palette();
+    cmd_clear();
+    cmd_splash();
+    newCmdLine();
+    return;
+  }
 
   if (scancode == 0x0E) {
     shellBackspace(1, true);

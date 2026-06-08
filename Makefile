@@ -31,7 +31,7 @@ TESTS_SRCS = $(wildcard $(TESTS_DIR)/*.c)
 TESTS_OBJS = $(TESTS_SRCS:$(TESTS_DIR)/%.c=$(BUILD_DIR)/%.o)
 
 $(BUILD_DIR)/kernel.bin: $(BUILD_DIR)/kernel_entry.o $(KERNEL_OBJS) $(DRIVER_OBJS) $(UTIL_OBJS) $(CPU_OBJS) $(APPS_OBJS) $(TESTS_OBJS) $(BUILD_DIR)/interrupt.o
-	i386-elf-ld -o $@ -Ttext 0x1000 $^ --oformat binary
+	i386-elf-ld -o $@ -Ttext 0x10000 $^ --oformat binary
 
 $(BUILD_DIR)/kernel_entry.o: $(BOOT_DIR)/kernel_entry.asm | $(BUILD_DIR)
 	nasm -I$(BOOT_DIR) $< -f elf -o $@
@@ -64,7 +64,7 @@ $(BUILD_DIR)/boot.bin: $(BOOT_DIR)/boot.asm | $(BUILD_DIR)
 	nasm -I$(BOOT_DIR) $< -f bin -o $@
 
 # sector count must match 'mov dh, N' in boot.asm
-BOOT_SECTORS = 40
+BOOT_SECTORS = 55
 STACK_LIMIT = 32256
 
 os-image.bin: $(BUILD_DIR)/boot.bin $(BUILD_DIR)/kernel.bin
@@ -85,7 +85,7 @@ run: os-image.bin
 	qemu-system-i386 -fda os-image.bin -serial stdio
 
 $(BUILD_DIR)/kernel.elf: $(BUILD_DIR)/kernel_entry.o $(KERNEL_OBJS) $(DRIVER_OBJS) $(UTIL_OBJS) $(CPU_OBJS) $(APPS_OBJS) $(TESTS_OBJS) $(BUILD_DIR)/interrupt.o
-	i386-elf-ld -o $@ -Ttext 0x1000 $^
+	i386-elf-ld -o $@ -Ttext 0x10000 $^
 
 debug: os-image.bin $(BUILD_DIR)/kernel.elf
 	qemu-system-i386 -s -S -fda os-image.bin &

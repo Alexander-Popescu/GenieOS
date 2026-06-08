@@ -7,6 +7,7 @@ int clearScreen() {
 
 	for (int i = 0; i < MAX_COLS * MAX_ROWS; i++) {
 		vRam[i*2] = ' '; // blank character
+		vRam[i*2+1] = WHITE_ON_BLACK; // default attribute (black background)
 	}
 
 	return 0;
